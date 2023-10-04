@@ -2,7 +2,7 @@
 name = "aineko_dream"
 version = "0.0.0"
 description = "Generative templating for the Aineko framework."
-authors = ["ricardo@convexlabs.xyz"]
+authors = ["Aineko Engineering <engineering@aineko.dev>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
