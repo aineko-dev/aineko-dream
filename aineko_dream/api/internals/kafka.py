@@ -89,9 +89,7 @@ class Producer:
         """Stop producer."""
         await self.producer.stop()
 
-    async def produce_message(
-        self, dataset: str, message: dict, key: str = None
-    ):
+    async def produce_message(self, dataset: str, message: dict, key: str = None):
         """Produce message to dataset.
 
         The "key" helps determine the partition to which the message will be

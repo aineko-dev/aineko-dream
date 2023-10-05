@@ -10,9 +10,7 @@ def test_mynode():
 
     mynode = MySumNode(test=True)
     mynode.setup_test(
-        inputs={
-            "test_sequence": [1, 2, 3]
-        },  # input a list of elements to be consumed
+        inputs={"test_sequence": [1, 2, 3]},  # input a list of elements to be consumed
         outputs=["test_sum"],  # list of dataset names that are produced to
         params={"initial_state": 0, "increment": 1},
     )

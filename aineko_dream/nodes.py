@@ -76,8 +76,7 @@ class CodeFetcher(AbstractNode):
 
         # Skip if event is not from the repo or branch we are tracking
         if (
-            message["message"]["repository"]["organization"]
-            != self.organization
+            message["message"]["repository"]["organization"] != self.organization
             or message["message"]["repository"]["name"] != self.repo
             or message["message"]["ref"] != f"refs/heads/{self.branch}"
         ):
@@ -98,8 +97,7 @@ class CodeFetcher(AbstractNode):
         }
         self.producers["repo_contents"].produce(cur_msg)
         self.log(
-            f"Fetched code for {self.organization}/{self.repo} "
-            f"branch {self.branch}"
+            f"Fetched code for {self.organization}/{self.repo} " f"branch {self.branch}"
         )
 
     def download_github_code(self) -> Union[dict, None]:
@@ -115,14 +113,10 @@ class CodeFetcher(AbstractNode):
             dict: nested dictionary of files in repo
         """
         try:
-            repo = self.github_client.get_repo(
-                f"{self.organization}/{self.repo}"
-            )
+            repo = self.github_client.get_repo(f"{self.organization}/{self.repo}")
             contents = repo.get_contents(self.file_contains, ref=self.branch)
             if isinstance(contents, list):
-                return {
-                    f.path: f.decoded_content.decode("utf-8") for f in contents
-                }
+                return {f.path: f.decoded_content.decode("utf-8") for f in contents}
             return {contents.path: contents.decoded_content.decode("utf-8")}
         except Exception as err:  # pylint: disable=broad-except
             self.log(
@@ -131,8 +125,7 @@ class CodeFetcher(AbstractNode):
             )
 
         self.log(
-            f"Unable to download {self.organization}/{repo} "
-            f"branch {self.branch}",
+            f"Unable to download {self.organization}/{repo} " f"branch {self.branch}",
             level="error",
         )
         if self.retries + 1 < self.max_retries:
@@ -157,9 +150,7 @@ class Prompt(AbstractNode):
         self.documentation = None
         self.template = ""
         for prompt in ["guidelines", "documentation", "instructions"]:
-            with open(
-                f"aineko_dream/prompts/{prompt}", "r", encoding="utf-8"
-            ) as f:
+            with open(f"aineko_dream/prompts/{prompt}", "r", encoding="utf-8") as f:
                 self.template += f.read()
                 self.template += "\n\n"
         self.model = params.get("model")
