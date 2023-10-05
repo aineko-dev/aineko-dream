@@ -1,5 +1,3 @@
-# Copyright 2023 Aineko Authors
-# SPDX-License-Identifier: Apache-2.0
 """Example file setting default configs for project."""
 
 from aineko.config import BaseConfig
@@ -10,3 +8,14 @@ class DEFAULT_CONFIG(BaseConfig):
     """Default configs for project."""
 
     NUM_CPUS = 0.5
+
+
+class API(BaseConfig):
+    """Config for API."""
+
+    PORT = 8000
+    BOOTSTRAP_SERVERS = "localhost:9092"
+    GROUP_ID = "fastapi"
+    CONSUMER_TOPICS = [
+        "dream_responses",
+    ]

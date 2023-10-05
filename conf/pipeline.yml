@@ -7,28 +7,70 @@ pipeline:
     num_cpus: 0.5
 
   nodes:
-    sequence:
-      class: aineko_dream.nodes.MySequencerNode
-      outputs:
-        - test_sequence
-      node_params:
-        initial_state: 0
-        increment: 1
-
-    sum:
-      node_settings:
-        num_cpus: 1
+    APIServer:
+      class: aineko_dream.nodes.APIServer
       inputs:
-        - test_sequence
+        - dream_responses
       outputs:
-        - test_sum
-      class: aineko_dream.nodes.MySumNode
+        - user_prompt
+        - github_events
       node_params:
-        increment: 1
+        app: aineko_dream.api.main:app
+        port: 8000
+
+    CodeFetcher:
+      class: aineko_dream.nodes.CodeFetcher
+      inputs:
+        - github_events
+      outputs:
+        - repo_contents
+      node_params:
+        organization: Convex-Labs
+        repo: aineko
+        branch: documentation
+        file_contains: "/docs/public/gitbook/aineko/04_developer_guide/building-a-pipeline.md"
+
+    Prompt:
+      class: aineko_dream.nodes.Prompt
+      inputs:
+        - user_prompt
+        - repo_contents
+      outputs:
+        - llm_prompt
+        - llm_response
+      node_params:
+        model: "gpt-3.5-turbo-16k"
+        max_tokens: 4000
+        temperature: 0.1
+
+    LLMResponseFormatter:
+      class: aineko_dream.nodes.LLMResponseFormatter
+      inputs:
+        - llm_response
+      outputs:
+        - formatted_response
+
+    PromptResponder:
+      class: aineko_dream.nodes.PromptResponder
+      inputs:
+        - formatted_response
+      outputs:
+        - dream_responses
+      node_params:
+        cleanup_interval: 600
 
   datasets:
-    test_sequence:
+    user_prompt:
       type: kafka_stream
-
-    test_sum:
+    github_events:
+      type: kafka_stream
+    repo_contents:
+      type: kafka_stream
+    llm_prompt:
+      type: kafka_stream
+    llm_response:
+      type: kafka_stream
+    formatted_response:
+      type: kafka_stream
+    dream_responses:
       type: kafka_stream

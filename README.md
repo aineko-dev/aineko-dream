@@ -1,6 +1,6 @@
-# aineko-dream
+# Aineko Dream
 
-An example pipeline
+Generative templating for the Aineko framework.
 
 ## Setup development environment
 
@@ -18,7 +18,7 @@ aineko service start
 
 Then start the pipeline using
 ```
-aineko run --config-file ./conf/pipeline.yml
+aineko run --config_file ./conf/pipeline.yml
 ```
 
 ## Observe the pipeline
@@ -26,15 +26,14 @@ aineko run --config-file ./conf/pipeline.yml
 To view the data flowing in the datasets
 
 ```
-aineko stream --dataset test_sequence
+aineko stream --dataset user_prompt
 ```
 
 To view all data in the dataset, from the start
 
 ```
-aineko stream --dataset test_sequence --from-start
+aineko stream --dataset user_prompt --from-start
 ```
-
 
 ## Taking down a pipeline
 

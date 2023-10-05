@@ -1,2 +1,3 @@
-# Copyright 2023 Aineko Authors
-# SPDX-License-Identifier: Apache-2.0
+"""Package information for Aineko Dream."""
+
+__version__ = "0.0.0"
