@@ -5,13 +5,12 @@ import time
 from typing import Optional, Union
 
 import openai
-import ray
 import uvicorn
 from aineko.core.node import AbstractNode
 from dotenv import load_dotenv
 from github import Auth, Github
 
-from aineko_dream.config import API, DEFAULT_CONFIG
+from aineko_dream.config import API
 
 
 class APIServer(AbstractNode):
