@@ -8,6 +8,7 @@ API files. Starting and ending is handled in main.py.
 """
 
 import datetime
+import json
 from contextlib import asynccontextmanager
 
 from aineko.config import AINEKO_CONFIG, DEFAULT_KAFKA_CONFIG
@@ -110,9 +111,10 @@ class Producer:
             "topic": dataset,
             "message": message,
         }
+        out_msg = json.dumps(out_msg).encode("utf-8")
 
         await self.producer.send_and_wait(
-            dataset, encode_message(out_msg), encode_message(key)
+            dataset, out_msg, encode_message(key)
         )
 
         return True

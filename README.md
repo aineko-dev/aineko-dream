@@ -18,7 +18,7 @@ aineko service start
 
 Then start the pipeline using
 ```
-aineko run --config_file ./conf/pipeline.yml
+aineko run -c conf/gpt3.yml
 ```
 
 ## Observe the pipeline

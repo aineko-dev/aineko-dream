@@ -4,4 +4,3 @@ Here are the guidelines for this prompt:
 2. Adding anything or deviating from the Aineko framework will cause the output to fail and this is not acceptable.
 3. Think carefully through the code you write and ensure that the code is perfect, there is no room for error.
 4. Do not use any libraries, frameworks, or projects that are not well-known and well-documented, unless they are explicitly mentioned in the instructions or in the prompt.
-5. The output should be a python file with all the classes formatted as Aineko Nodes required to run an Aineko pipeline that suffices the customer's use case.

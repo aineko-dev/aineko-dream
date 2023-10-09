@@ -1,5 +1,5 @@
-You will be expected to write code in python using the Aineko framework. I will share documentation about the framework for your reference.
+You will be expected to write code in python using the Aineko framework. I will share documentation about the Aineko framework for your reference.
 
 The following file describe the Aineko framework in detail. You will find everything you need to know about how to write Aineko Node code in python using the Aineko framework. Use this documentation as a reference for the output you generate. You will need to follow the documentation closely to ensure that your output runs without any errors.
 
-{documentation}
+{document}
