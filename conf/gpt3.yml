@@ -1,7 +1,7 @@
 # Copyright 2023 Aineko Authors
 # SPDX-License-Identifier: Apache-2.0
 pipeline:
-  name: template-generator
+  name: gpt3-template-generator
 
   default_node_settings:
     num_cpus: 0.5
