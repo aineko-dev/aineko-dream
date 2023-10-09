@@ -1,0 +1,46 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <body>
+        <pre class="mermaid">
+        flowchart LR
+classDef datasetClass fill:#87CEEB
+classDef nodeClass fill:#eba487
+T_github_event[github_event]:::datasetClass -->  N_GitHubDocFetcher((GitHubDocFetcher)):::nodeClass
+N_GitHubDocFetcher((GitHubDocFetcher)):::nodeClass -->  T_document[document]:::datasetClass
+T_user_prompt[user_prompt]:::datasetClass -->  N_PromptModel((PromptModel)):::nodeClass
+T_document[document]:::datasetClass -->  N_PromptModel((PromptModel)):::nodeClass
+N_PromptModel((PromptModel)):::nodeClass -->  T_generated_prompt[generated_prompt]:::datasetClass
+N_PromptModel((PromptModel)):::nodeClass -->  T_prompt_error[prompt_error]:::datasetClass
+T_generated_prompt[generated_prompt]:::datasetClass -->  N_GPT3Client((GPT3Client)):::nodeClass
+N_GPT3Client((GPT3Client)):::nodeClass -->  T_llm_response[llm_response]:::datasetClass
+N_GPT3Client((GPT3Client)):::nodeClass -->  T_prompt_error[prompt_error]:::datasetClass
+T_llm_response[llm_response]:::datasetClass -->  N_LLMResponseFormatter((LLMResponseFormatter)):::nodeClass
+N_LLMResponseFormatter((LLMResponseFormatter)):::nodeClass -->  T_formatted_llm_response[formatted_llm_response]:::datasetClass
+N_LLMResponseFormatter((LLMResponseFormatter)):::nodeClass -->  T_prompt_error[prompt_error]:::datasetClass
+T_formatted_llm_response[formatted_llm_response]:::datasetClass -->  N_PythonEvaluation((PythonEvaluation)):::nodeClass
+N_PythonEvaluation((PythonEvaluation)):::nodeClass -->  T_evaluation_result[evaluation_result]:::datasetClass
+T_formatted_llm_response[formatted_llm_response]:::datasetClass -->  N_SecurityEvaluation((SecurityEvaluation)):::nodeClass
+N_SecurityEvaluation((SecurityEvaluation)):::nodeClass -->  T_evaluation_result[evaluation_result]:::datasetClass
+T_generated_prompt[generated_prompt]:::datasetClass -->  N_EvaluationModel((EvaluationModel)):::nodeClass
+T_llm_response[llm_response]:::datasetClass -->  N_EvaluationModel((EvaluationModel)):::nodeClass
+T_evaluation_result[evaluation_result]:::datasetClass -->  N_EvaluationModel((EvaluationModel)):::nodeClass
+T_prompt_error[prompt_error]:::datasetClass -->  N_EvaluationModel((EvaluationModel)):::nodeClass
+N_EvaluationModel((EvaluationModel)):::nodeClass -->  T_final_response[final_response]:::datasetClass
+N_EvaluationModel((EvaluationModel)):::nodeClass -->  T_generated_prompt[generated_prompt]:::datasetClass
+N_EvaluationModel((EvaluationModel)):::nodeClass -->  T_evaluation_error[evaluation_error]:::datasetClass
+T_final_response[final_response]:::datasetClass -->  N_ResponseCache((ResponseCache)):::nodeClass
+T_evaluation_error[evaluation_error]:::datasetClass -->  N_ResponseCache((ResponseCache)):::nodeClass
+T_prompt_error[prompt_error]:::datasetClass -->  N_ResponseCache((ResponseCache)):::nodeClass
+N_ResponseCache((ResponseCache)):::nodeClass -->  T_response_cache[response_cache]:::datasetClass
+T_response_cache[response_cache]:::datasetClass -->  N_APIServer((APIServer)):::nodeClass
+N_APIServer((APIServer)):::nodeClass -->  T_user_prompt[user_prompt]:::datasetClass
+N_APIServer((APIServer)):::nodeClass -->  T_github_event[github_event]:::datasetClass
+
+        </pre>
+        <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        </script>
+    </body>
+    </html>
+    

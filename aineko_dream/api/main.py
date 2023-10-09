@@ -5,8 +5,8 @@ A kafka consumer and producer are initialized in the start_kafka function.
 These will be used by the api app to send and receive messages from the
 aineko pipeline.
 """
-import ast
-from typing import Dict
+import json
+from typing import Dict, Annotated
 import hashlib
 import hmac
 import os
@@ -29,15 +29,15 @@ TIMEOUT = 60 * 2
 app = FastAPI(lifespan=start_kafka)
 
 
-async def wait_and_send(request_id: str, response_url: str) -> None:
-    """Wait for message from aineko pipeline and send it to slack."""
+async def wait_for_message(request_id: str) -> Dict[str, str]:
+    """Wait for message from aineko pipeline."""
     # Wait for correct response from aineko pipeline, look for request id
     start_time = time.time()
     while time.time() - start_time < TIMEOUT:
         # Fetches aineko dream responses
         try:
-            message = await CONSUMERS.consume_latest_message("dream_responses")
-            message = ast.literal_eval(message.value.decode("utf-8"))
+            message = await CONSUMERS.consume_latest_message("response_cache")
+            message = json.loads(message.value.decode("utf-8"))
         except Exception as e:
             raise HTTPException(  # pylint: disable=raise-missing-from
                 status_code=500,
@@ -45,24 +45,33 @@ async def wait_and_send(request_id: str, response_url: str) -> None:
             )
         response_cache = message["message"]
         if request_id in response_cache:
-            # Send response to slack
-            requests.post(
-                response_url,
-                json={"text": response_cache[request_id]["dream"]},
-                timeout=10,
-            )
-            return
-        time.sleep(1)
+            return response_cache[request_id]
+        time.sleep(0.5)
     else:
-        requests.post(
-            response_url,
-            json={"text": "Timeout while waiting for response."},
-            timeout=10,
-        )
         raise HTTPException(  # pylint: disable=raise-missing-from
             status_code=408,
             detail="Timeout while waiting for response.",
         )
+
+
+async def wait_and_send(request_id: str, response_url: str) -> None:
+    """Wait for message from aineko pipeline and send it to slack."""
+    # Wait for correct response from aineko pipeline, look for request id
+    try:
+        response = await wait_for_message(request_id)
+        requests.post(
+            response_url,
+            json={"text": response["response"]},
+            timeout=10,
+        )
+        return
+    except Exception as err: # pylint: disable=broad-except
+        requests.post(
+            response_url,
+            json={"text": str(err)},
+            timeout=10,
+        )
+        raise err
 
 
 @app.post("/aineko-dream-dev/", status_code=200)
@@ -96,7 +105,7 @@ async def code_gen(
     # Send request to aineko pipeline using uuid as request id
     request_id = str(uuid.uuid4())
     request = {
-        "request_id": str(uuid.uuid4()),
+        "request_id": request_id,
         "prompt": flattened_dict["text"],
     }
     await PRODUCER.produce_message("user_prompt", request)
@@ -138,3 +147,19 @@ async def handle_github_event(request: Request) -> Dict[str, str]:
         )
     await PRODUCER.produce_message("github_events", payload)
     return {"status": "event processed"}
+
+
+@app.get("/aineko-dream-test/{prompt}")
+async def code_gen_test(prompt: Annotated[str, "prompt to generate code"]) -> Dict[str, str]:
+    """Create a new project from a prompt."""
+    # Send request to aineko pipeline using uuid as request id
+    request_id = str(uuid.uuid4())
+    user_prompt = {
+        "request_id": request_id,
+        "prompt": prompt,
+    }
+    await PRODUCER.produce_message("user_prompt", user_prompt)
+
+    # Wait for response from aineko pipeline and return
+    response = await wait_for_message(request_id)
+    return {"text": response["response"]}
