@@ -11,9 +11,9 @@ pipeline:
     GitHubDocFetcher:
       class: aineko_dream.nodes.GitHubDocFetcher
       inputs:
-        - github_events
+        - github_event
       outputs:
-        - documents
+        - document
       node_params:
         organization: Convex-Labs
         repo: aineko
@@ -23,36 +23,34 @@ pipeline:
       class: aineko_dream.nodes.PromptModel
       inputs:
         - user_prompt
-        - documents
+        - document
       outputs:
-        - llm_prompt
-      node_params:
-        routing_preferences:
-          company_slack: GPT3Client
-          public_slack: GPT3Client
+        - generated_prompt
+        - prompt_error
 
     # LLM Client
     GPT4Client:
       class: aineko_dream.nodes.OpenAIClient
       inputs:
-        - llm_prompt
+        - generated_prompt
       outputs:
         - llm_response
+        - prompt_error
       node_params:
         model: "gpt-4"
-        max_tokens: 4000
+        max_tokens: 8000
         temperature: 0.1
-        role: engineer
 
     # Response evaluation
-    ResponseFormatter:
-      class: aineko_dream.nodes.ResponseFormatter
+    LLMResponseFormatter:
+      class: aineko_dream.nodes.LLMResponseFormatter
       inputs:
         - llm_response
       outputs:
         - formatted_llm_response
-    FrameworkEvaluation:
-      class: aineko_dream.nodes.FrameworkEvaluation
+        - prompt_error
+    PythonEvaluation:
+      class: aineko_dream.nodes.PythonEvaluation
       inputs:
         - formatted_llm_response
       outputs:
@@ -66,18 +64,22 @@ pipeline:
     EvaluationModel:
       class: aineko_dream.nodes.EvaluationModel
       inputs:
-        - llm_prompt
-        - formatted_llm_response
+        - generated_prompt
+        - llm_response
         - evaluation_result
+        - prompt_error
       outputs:
         - final_response
-        - llm_prompt
+        - generated_prompt
+        - evaluation_error
 
     # API
     ResponseCache:
       class: aineko_dream.nodes.ResponseCache
       inputs:
         - final_response
+        - evaluation_error
+        - prompt_error
       outputs:
         - response_cache
       node_params:
@@ -88,19 +90,19 @@ pipeline:
         - response_cache
       outputs:
         - user_prompt
-        - github_events
+        - github_event
       node_params:
         app: aineko_dream.api.main:app
         port: 8000
 
   datasets:
-    github_events:
+    github_event:
       type: kafka_stream
-    documents:
+    document:
       type: kafka_stream
     user_prompt:
       type: kafka_stream
-    llm_prompt:
+    generated_prompt:
       type: kafka_stream
     llm_response:
       type: kafka_stream
@@ -111,4 +113,8 @@ pipeline:
     final_response:
       type: kafka_stream
     response_cache:
+      type: kafka_stream
+    prompt_error:
+      type: kafka_stream
+    evaluation_error:
       type: kafka_stream

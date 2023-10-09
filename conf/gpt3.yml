@@ -27,8 +27,6 @@ pipeline:
       outputs:
         - generated_prompt
         - prompt_error
-      node_params:
-        role: "programmer"
 
     # LLM Client
     GPT3Client:
@@ -42,7 +40,6 @@ pipeline:
         model: "gpt-3.5-turbo-16k"
         max_tokens: 4000
         temperature: 0.1
-        role: "programmer"
 
     # Response evaluation
     LLMResponseFormatter:
