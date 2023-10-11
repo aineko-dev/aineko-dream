@@ -2,6 +2,10 @@
 
 Generative templating for the Aineko framework.
 
+## Tutorial
+
+See a tutorial here: https://docs.aineko.dev/examples/aineko-dream-code-generation-using-chatgpt-with-real-time-qa
+
 ## Setup development environment
 
 ```
