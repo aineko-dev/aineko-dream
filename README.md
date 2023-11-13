@@ -4,7 +4,7 @@ Generative templating for the Aineko framework.
 
 ## Tutorial
 
-See a tutorial here: https://docs.aineko.dev/examples/aineko-dream-code-generation-using-chatgpt-with-real-time-qa
+See a tutorial [here](https://docs.aineko.dev/dev/examples/aineko-dream/)
 
 ## Setup development environment
 
