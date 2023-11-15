@@ -1,0 +1,122 @@
+# Copyright 2023 Aineko Authors
+# SPDX-License-Identifier: Apache-2.0
+pipeline:
+  name: template-generator
+
+  default_node_settings:
+    num_cpus: 0.5
+
+  nodes:
+    # Prompt generation
+    GitHubDocFetcher:
+      class: aineko_dream.nodes.GitHubDocFetcher
+      inputs:
+        - github_event
+      outputs:
+        - document
+      node_params:
+        organization: aineko-dev
+        repo: aineko
+        branch: develop
+        file_path:
+          - docs/developer_guide/aineko_project.md
+          - docs/developer_guide/node_implementation.md
+    PromptModel:
+      class: aineko_dream.nodes.PromptModel
+      inputs:
+        - user_prompt
+        - document
+      outputs:
+        - generated_prompt
+        - prompt_error
+
+    # LLM Client
+    GPTClient:
+      class: aineko_dream.nodes.OpenAIClient
+      inputs:
+        - generated_prompt
+      outputs:
+        - llm_response
+        - prompt_error
+      node_params:
+        model: "gpt-4"
+        max_tokens: 4000
+        temperature: 0.1
+
+    # Response evaluation
+    LLMResponseFormatter:
+      class: aineko_dream.nodes.LLMResponseFormatter
+      inputs:
+        - llm_response
+      outputs:
+        - formatted_llm_response
+        - prompt_error
+    PythonEvaluation:
+      class: aineko_dream.nodes.PythonEvaluation
+      inputs:
+        - formatted_llm_response
+      outputs:
+        - evaluation_result
+    SecurityEvaluation:
+      class: aineko_dream.nodes.SecurityEvaluation
+      inputs:
+        - formatted_llm_response
+      outputs:
+        - evaluation_result
+    EvaluationModel:
+      class: aineko_dream.nodes.EvaluationModel
+      inputs:
+        - generated_prompt
+        - llm_response
+        - evaluation_result
+        - prompt_error
+      outputs:
+        - final_response
+        - generated_prompt
+        - evaluation_error
+
+    # API
+    ResponseCache:
+      class: aineko_dream.nodes.ResponseCache
+      inputs:
+        - final_response
+        - evaluation_error
+        - prompt_error
+      outputs:
+        - response_cache
+      node_params:
+        cleanup_interval: 600
+    APIServer:
+      class: aineko_dream.nodes.APIServer
+      inputs:
+        - response_cache
+      outputs:
+        - user_prompt
+        - github_event
+      node_params:
+        app: aineko_dream.api.main:app
+        port: 8000
+
+  datasets:
+    github_event:
+      type: kafka_stream
+    document:
+      type: kafka_stream
+    user_prompt:
+      type: kafka_stream
+    generated_prompt:
+      type: kafka_stream
+    llm_response:
+      type: kafka_stream
+    formatted_llm_response:
+      type: kafka_stream
+    evaluation_result:
+      type: kafka_stream
+    final_response:
+      type: kafka_stream
+    response_cache:
+      type: kafka_stream
+    prompt_error:
+      type: kafka_stream
+    evaluation_error:
+      type: kafka_stream
