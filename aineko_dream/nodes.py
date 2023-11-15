@@ -8,7 +8,7 @@ import time
 from typing import Optional, Union
 
 import bandit
-import openai
+from openai import OpenAI
 import uvicorn
 from aineko.core.node import AbstractNode
 from dotenv import load_dotenv
@@ -40,7 +40,7 @@ class GitHubDocFetcher(AbstractNode):
             raise ValueError(
                 "GITHUB_ACCESS_TOKEN is not set. Add to .env file or "
                 "ensure it is set as an environment variable."
-                )
+            )
         if self.organization is None:
             raise ValueError("organization is not set in GitHubDocFetcher params.")
         if self.repo is None:
@@ -68,7 +68,7 @@ class GitHubDocFetcher(AbstractNode):
             or "organization" not in message["message"]["repository"]
             or "name" not in message["message"]["repository"]
             or "ref" not in message["message"]
-            ):
+        ):
             self.log(f"Received invalid event from GitHub: {message}", level="error")
             return
 
@@ -87,8 +87,18 @@ class GitHubDocFetcher(AbstractNode):
     def fetch_github_contents(self) -> Union[dict, None]:
         """Download code from a github repo."""
         try:
-            repo = self.github_client.get_repo(f"{self.organization}/{self.repo}")
-            contents = repo.get_contents(self.file_path, ref=self.branch)
+            if isinstance(self.file_path, list):
+                repo = self.github_client.get_repo(f"{self.organization}/{self.repo}")
+                contents = []
+                for file_path in self.file_path:
+                    cur_contents = repo.get_contents(file_path, ref=self.branch)
+                    if isinstance(cur_contents, list):
+                        contents.extend(cur_contents)
+                    else:
+                        contents.append(cur_contents)
+            else:
+                repo = self.github_client.get_repo(f"{self.organization}/{self.repo}")
+                contents = repo.get_contents(self.file_path, ref=self.branch)
             if isinstance(contents, list):
                 return {f.path: f.decoded_content.decode("utf-8") for f in contents}
             return {contents.path: contents.decoded_content.decode("utf-8")}
@@ -100,7 +110,7 @@ class GitHubDocFetcher(AbstractNode):
 
         # Retry if failed
         self.log(
-            f"Unable to download {self.organization}/{repo} branch {self.branch}",
+            f"Unable to download {self.organization}/{self.repo} branch {self.branch}",
             level="error",
         )
         if self.retries + 1 < self.max_retries:
@@ -182,7 +192,7 @@ class PromptModel(AbstractNode):
         self.log("Creating prompt from user input...")
         prompt = self.template.format(
             instructions=user_prompt["message"]["prompt"],
-            document=self.document,
+            documentation=self.document,
         )
         message = {
             "chat_messages": [
@@ -206,10 +216,10 @@ class OpenAIClient(AbstractNode):
     def _pre_loop_hook(self, params: Optional[dict] = None) -> None:
         """Initialize connection with OpenAI."""
         load_dotenv()
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.model = params.get("model")
         self.max_tokens = params.get("max_tokens")
         self.temperature = params.get("temperature")
-        openai.api_key = os.getenv("OPENAI_API_KEY")
 
     def _execute(self, params: Optional[dict] = None) -> Optional[bool]:
         """Query OpenAI LLM."""
@@ -220,7 +230,7 @@ class OpenAIClient(AbstractNode):
         # Query OpenAI LLM
         self.log("Querying OpenAI LLM...")
         try:
-            response = openai.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 messages=messages,
                 stream=False,
                 model=self.model,
@@ -265,7 +275,7 @@ class LLMResponseFormatter(AbstractNode):
         llm_response = self.consumers["llm_response"].consume(how="next")
         if llm_response is None:
             return
-        
+
         # Format response
         try:
             chat_messages = llm_response["message"]["chat_messages"]
@@ -315,7 +325,7 @@ class PythonEvaluation(AbstractNode):
         message = self.consumers["formatted_llm_response"].consume()
         if message is None:
             return
-        
+
         # Evaluate Python code
         python_code = message["message"]["python_code"]
         try:
@@ -329,8 +339,8 @@ class PythonEvaluation(AbstractNode):
                         "message": {
                             "role": "user",
                             "content": f"I found a SyntaxError error in the Python code. Restate the previous response with fixes for the error. Here is the error: {str(err)}",
-                        }
-                    }
+                        },
+                    },
                 }
             )
         except Exception as err:  # pylint: disable=broad-except
@@ -340,7 +350,7 @@ class PythonEvaluation(AbstractNode):
                     f"evaluation_result_{self.evaluation_name}": {
                         "result": "ERROR",
                         "message": str(err),
-                    }
+                    },
                 }
             )
             return
@@ -349,8 +359,8 @@ class PythonEvaluation(AbstractNode):
                 "request_id": message["message"]["request_id"],
                 f"evaluation_result_{self.evaluation_name}": {
                     "result": "PASS",
-                    "message": None
-                }
+                    "message": None,
+                },
             }
         )
 
@@ -371,11 +381,13 @@ class SecurityEvaluation(AbstractNode):
         python_code = message["message"]["python_code"]
         issues_list = []
         try:
-            with tempfile.NamedTemporaryFile(suffix=".py", delete=False, mode="w") as tmpfile:
+            with tempfile.NamedTemporaryFile(
+                suffix=".py", delete=False, mode="w"
+            ) as tmpfile:
                 tmpfile.write(python_code)
 
             # Setup Bandit and run tests on the temporary file
-            b_mgr = bandit.manager.BanditManager(bandit.config.BanditConfig(), 'file')
+            b_mgr = bandit.manager.BanditManager(bandit.config.BanditConfig(), "file")
             b_mgr.discover_files([tmpfile.name], None)
             b_mgr.run_tests()
 
@@ -383,7 +395,7 @@ class SecurityEvaluation(AbstractNode):
             results = b_mgr.get_issue_list(
                 sev_level=bandit.constants.LOW,
                 conf_level=bandit.constants.LOW,
-                )
+            )
 
             # Cleanup (remove the temporary file)
             tmpfile.close()
@@ -396,7 +408,8 @@ class SecurityEvaluation(AbstractNode):
                     "severity": issue.severity,
                     "confidence": issue.confidence,
                     "issue_text": issue.text,
-                } for issue in results
+                }
+                for issue in results
             ]
         except Exception as err:  # pylint: disable=broad-except
             try:
@@ -410,7 +423,7 @@ class SecurityEvaluation(AbstractNode):
                     f"evaluation_result_{self.evaluation_name}": {
                         "result": "ERROR",
                         "message": str(err),
-                    }
+                    },
                 }
             )
 
@@ -423,8 +436,8 @@ class SecurityEvaluation(AbstractNode):
                         "message": {
                             "role": "user",
                             "content": f"I found Bandit issues in the Python code. Restate the previous response with fixes for the issues. Here are the issues: {issues_list}",
-                        }
-                    }
+                        },
+                    },
                 }
             )
         else:
@@ -433,8 +446,8 @@ class SecurityEvaluation(AbstractNode):
                     "request_id": message["message"]["request_id"],
                     f"evaluation_result_{self.evaluation_name}": {
                         "result": "PASS",
-                        "message": None
-                    }
+                        "message": None,
+                    },
                 }
             )
 
@@ -485,9 +498,7 @@ class EvaluationModel(AbstractNode):
     def cleanup_state(self) -> None:
         """Cleanup state."""
         self.state = {
-            k: v
-            for k, v in self.state.items()
-            if time.time() - v["timestamp"] <= 100
+            k: v for k, v in self.state.items() if time.time() - v["timestamp"] <= 100
         }
 
     def evaluate_model(self) -> None:
@@ -498,13 +509,13 @@ class EvaluationModel(AbstractNode):
             if (
                 "evaluation_result_python" not in message
                 or "evaluation_result_security" not in message
-                ):
+            ):
                 continue
             # If both evaluations pass, submit final response
             if (
                 message["evaluation_result_python"]["result"] == "PASS"
                 and message["evaluation_result_security"]["result"] == "PASS"
-                ):
+            ):
                 self.producers["final_response"].produce(
                     {
                         "request_id": request_id,

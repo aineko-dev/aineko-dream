@@ -1,20 +1,20 @@
 [tool.poetry]
 name = "aineko-dream"
 version = "0.0.0"
-description = "Generative templating for the Aineko framework."
+description = "Dreaming of Aineko apps..."
 authors = ["Aineko Engineering <engineering@aineko.dev>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.11"
-aineko = { path = "/Users/convexricardo/git/aineko-dev/aineko", develop=true}
-fastapi = "^0.103.1"
-uvicorn = "^0.23.2"
-aiokafka = "^0.8.1"
-openai = "^0.28.1"
+aineko = "0.2.3"
+openai = "^1.2.4"
+uvicorn = "^0.24.0.post1"
+pygithub = "^2.1.1"
 python-dotenv = "^1.0.0"
-pygithub = "^1.59.1"
+fastapi = "^0.104.1"
 bandit = "^1.7.5"
+aiokafka = "^0.8.1"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.1"

@@ -8,8 +8,8 @@ API files. Starting and ending is handled in main.py.
 """
 
 import datetime
-import json
 from contextlib import asynccontextmanager
+import json
 
 from aineko.config import AINEKO_CONFIG, DEFAULT_KAFKA_CONFIG
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
@@ -44,7 +44,9 @@ class Consumers:
         for dataset in datasets:
             self.consumers[dataset] = AIOKafkaConsumer(
                 dataset,
-                bootstrap_servers=DEFAULT_KAFKA_CONFIG.get("BROKER_SERVER"),
+                bootstrap_servers=DEFAULT_KAFKA_CONFIG.get("BROKER_CONFIG").get(
+                    "bootstrap.servers"
+                ),
                 group_id=API.get("GROUP_ID"),
             )
 
@@ -82,7 +84,9 @@ class Producer:
     async def start_producer(self):
         """Create producer and starts it."""
         self.producer = AIOKafkaProducer(
-            bootstrap_servers=DEFAULT_KAFKA_CONFIG.get("BROKER_SERVER")
+            bootstrap_servers=DEFAULT_KAFKA_CONFIG.get("BROKER_CONFIG").get(
+                "bootstrap.servers"
+            )
         )
         await self.producer.start()
 
@@ -113,9 +117,7 @@ class Producer:
         }
         out_msg = json.dumps(out_msg).encode("utf-8")
 
-        await self.producer.send_and_wait(
-            dataset, out_msg, encode_message(key)
-        )
+        await self.producer.send_and_wait(dataset, out_msg, encode_message(key))
 
         return True
 

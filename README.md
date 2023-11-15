@@ -1,6 +1,6 @@
-# Aineko Dream
+# aineko-dream
 
-Generative templating for the Aineko framework.
+An example pipeline
 
 ## Tutorial
 
@@ -17,12 +17,12 @@ poetry install
 First, make sure that docker is running and run the required docker services in the background
 
 ```
-aineko service start
+poetry run aineko service start
 ```
 
 Then start the pipeline using
 ```
-aineko run -c conf/gpt3.yml
+poetry run aineko run conf/pipeline.yml
 ```
 
 ## Observe the pipeline
@@ -30,14 +30,15 @@ aineko run -c conf/gpt3.yml
 To view the data flowing in the datasets
 
 ```
-aineko stream --dataset user_prompt
+poetry run aineko stream logging
 ```
 
 To view all data in the dataset, from the start
 
 ```
-aineko stream --dataset user_prompt --from-start
+poetry run aineko stream logging -b
 ```
+
 
 ## Taking down a pipeline
 
@@ -45,5 +46,10 @@ In the terminal screen running the pipeline, you can press `ctrl-c` to stop exec
 
 Clean up background services
 ```
-aineko service stop
+poetry run aineko service stop
 ```
+
+
+## Try it out!
+
+Visit http://localhost:8000/docs to view the API documentation via Swagger. Use the `test` endpoint to give it a spin.
