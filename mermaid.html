@@ -12,9 +12,9 @@ T_user_prompt[user_prompt]:::datasetClass -->  N_PromptModel((PromptModel)):::no
 T_document[document]:::datasetClass -->  N_PromptModel((PromptModel)):::nodeClass
 N_PromptModel((PromptModel)):::nodeClass -->  T_generated_prompt[generated_prompt]:::datasetClass
 N_PromptModel((PromptModel)):::nodeClass -->  T_prompt_error[prompt_error]:::datasetClass
-T_generated_prompt[generated_prompt]:::datasetClass -->  N_GPT3Client((GPT3Client)):::nodeClass
-N_GPT3Client((GPT3Client)):::nodeClass -->  T_llm_response[llm_response]:::datasetClass
-N_GPT3Client((GPT3Client)):::nodeClass -->  T_prompt_error[prompt_error]:::datasetClass
+T_generated_prompt[generated_prompt]:::datasetClass -->  N_GPTClient((GPTClient)):::nodeClass
+N_GPTClient((GPTClient)):::nodeClass -->  T_llm_response[llm_response]:::datasetClass
+N_GPTClient((GPTClient)):::nodeClass -->  T_prompt_error[prompt_error]:::datasetClass
 T_llm_response[llm_response]:::datasetClass -->  N_LLMResponseFormatter((LLMResponseFormatter)):::nodeClass
 N_LLMResponseFormatter((LLMResponseFormatter)):::nodeClass -->  T_formatted_llm_response[formatted_llm_response]:::datasetClass
 N_LLMResponseFormatter((LLMResponseFormatter)):::nodeClass -->  T_prompt_error[prompt_error]:::datasetClass

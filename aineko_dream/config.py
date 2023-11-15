@@ -17,5 +17,5 @@ class API(BaseConfig):
     BOOTSTRAP_SERVERS = "localhost:9092"
     GROUP_ID = "fastapi"
     CONSUMER_TOPICS = [
-        "response_cache",
+        "template-generator.response_cache",
     ]
