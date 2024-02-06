@@ -19,6 +19,3 @@ aiokafka = "^0.8.1"
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.1"
 pytest-cov = "^4.1.0"
-
-[tool.poetry.scripts]
-aineko = "aineko.__main__:_cli"
